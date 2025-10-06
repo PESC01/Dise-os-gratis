@@ -39,12 +39,7 @@ const DesignDetail = () => {
       script.setAttribute('data-cfasync', 'false');
       document.body.appendChild(script);
 
-      return () => {
-        // Limpiar el script cuando se cierre el modal
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
+      // No eliminar el script para permitir tracking completo de Adsterra
     }
   }, [showAdModal]);
 
@@ -62,11 +57,7 @@ const DesignDetail = () => {
 
       return () => {
         clearTimeout(timer);
-        // Limpiar el popunder cuando se cierre el modal
-        const script = document.getElementById('popunder-script-active');
-        if (script && document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
+        // No eliminar el script del popunder para permitir tracking completo de Adsterra
       };
     }
   }, [showAdModal, loadPopunderForThisDownload]);
