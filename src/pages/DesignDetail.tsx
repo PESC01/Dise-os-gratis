@@ -16,7 +16,6 @@ const DesignDetail = () => {
   const { id } = useParams();
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  const [shouldShowAd, setShouldShowAd] = useState(true); // Alterna entre true y false
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -46,14 +45,15 @@ const DesignDetail = () => {
     }
   }, [showAdModal]);
 
-  // Cargar el popunder solo cuando se debe mostrar el anuncio
+  // Cargar el popunder SIEMPRE que se presione "Descargar Ahora"
+  // Adsterra controla automáticamente que solo se muestre 1 cada 24 horas
   const loadPopunder = () => {
     const popunderScript = document.createElement('script');
     popunderScript.type = 'text/javascript';
     popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
     document.body.appendChild(popunderScript);
     
-    // Simular un clic para activar el popunder
+    // Limpiar el script después de cargarlo
     setTimeout(() => {
       if (document.body.contains(popunderScript)) {
         document.body.removeChild(popunderScript);
@@ -62,23 +62,12 @@ const DesignDetail = () => {
   };
 
   const handleDownloadClick = () => {
-    if (shouldShowAd) {
-      // Cargar y activar el popunder
-      loadPopunder();
-      // Mostrar modal con native banner
-      setShowAdModal(true);
-      setCountdown(5);
-      // La próxima vez irá directo a la descarga
-      setShouldShowAd(false);
-    } else {
-      // Ir directamente a la descarga
-      const downloadUrl = (design as any)?.download_link;
-      if (downloadUrl) {
-        window.open(downloadUrl, "_blank");
-        // La próxima vez mostrará el modal con popunder
-        setShouldShowAd(true);
-      }
-    }
+    // SIEMPRE cargar el popunder en cada clic
+    loadPopunder();
+    
+    // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
+    setShowAdModal(true);
+    setCountdown(5);
   };
 
   const handleProceedToDownload = () => {
