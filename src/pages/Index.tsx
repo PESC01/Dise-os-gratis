@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Search, Filter, Loader2 } from "lucide-react";
+import { Search, Filter, Loader2, ChevronLeft, ChevronRight, ChevronsLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,8 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSubcategory, setSelectedSubcategory] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const DESIGNS_PER_PAGE = 30;
 
   const { data: designs, isLoading: designsLoading } = useDesigns();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
@@ -35,6 +37,18 @@ const Index = () => {
   const handleCategoryChange = (value: string) => {
     setSelectedCategory(value);
     setSelectedSubcategory("all");
+    setCurrentPage(1); // Resetear a la primera página
+  };
+
+  // Resetear página cuando cambia la búsqueda o filtros
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+  };
+
+  const handleSubcategoryChange = (value: string) => {
+    setSelectedSubcategory(value);
+    setCurrentPage(1);
   };
 
   // Filtrar y buscar diseños
@@ -59,6 +73,16 @@ const Index = () => {
       return matchesSearch && matchesCategory && matchesSubcategory;
     });
   }, [designs, searchQuery, selectedCategory, selectedSubcategory]);
+
+  // Calcular paginación
+  const totalPages = Math.ceil(filteredDesigns.length / DESIGNS_PER_PAGE);
+  const startIndex = (currentPage - 1) * DESIGNS_PER_PAGE;
+  const endIndex = startIndex + DESIGNS_PER_PAGE;
+  const paginatedDesigns = filteredDesigns.slice(startIndex, endIndex);
+
+  const goToFirstPage = () => setCurrentPage(1);
+  const goToPreviousPage = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const goToNextPage = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,7 +112,7 @@ const Index = () => {
                   placeholder="Buscar diseños..."
                   className="pl-10"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                 />
               </div>
             </div>
@@ -110,7 +134,7 @@ const Index = () => {
               </Select>
 
               {availableSubcategories.length > 0 && (
-                <Select value={selectedSubcategory} onValueChange={setSelectedSubcategory}>
+                <Select value={selectedSubcategory} onValueChange={handleSubcategoryChange}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Subcategoría" />
                   </SelectTrigger>
@@ -136,8 +160,9 @@ const Index = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : filteredDesigns.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {filteredDesigns.map((design, index) => (
+          <>
+            <div className="grid grid-cols-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+              {paginatedDesigns.map((design, index) => (
               <Link
                 key={design.id}
                 to={`/design/${design.id}`}
@@ -181,6 +206,46 @@ const Index = () => {
               </Link>
             ))}
           </div>
+
+            {/* Paginación */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToFirstPage}
+                  disabled={currentPage === 1}
+                  className="gap-1"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                  Inicio
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToPreviousPage}
+                  disabled={currentPage === 1}
+                  className="gap-1"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Anterior
+                </Button>
+                <span className="text-sm text-muted-foreground px-4">
+                  Página {currentPage} de {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToNextPage}
+                  disabled={currentPage === totalPages}
+                  className="gap-1"
+                >
+                  Siguiente
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 space-y-4">
             <p className="text-muted-foreground text-lg">
