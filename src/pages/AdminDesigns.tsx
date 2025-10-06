@@ -103,22 +103,6 @@ const AdminDesigns = () => {
                         {design.description}
                       </p>
                     )}
-                    
-                    {/* Display category and subcategories */}
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {(design as any).category && (
-                        <Badge variant="default" className="text-xs">
-                          {(design as any).category.name}
-                        </Badge>
-                      )}
-                      {(design as any).subcategories && (design as any).subcategories.length > 0 && (
-                        (design as any).subcategories.map((subcategory: any) => (
-                          <Badge key={subcategory.id} variant="secondary" className="text-xs">
-                            {subcategory.name}
-                          </Badge>
-                        ))
-                      )}
-                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button

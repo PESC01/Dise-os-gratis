@@ -204,27 +204,6 @@ const Index = () => {
                         {design.description}
                       </p>
                     )}
-                    
-                    {/* Display category and subcategories */}
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {(design as any).category && (
-                        <Badge variant="default" className="text-xs">
-                          {(design as any).category.name}
-                        </Badge>
-                      )}
-                      {(design as any).subcategories && (design as any).subcategories.length > 0 && (
-                        (design as any).subcategories.slice(0, 2).map((subcategory: any) => (
-                          <Badge key={subcategory.id} variant="secondary" className="text-xs">
-                            {subcategory.name}
-                          </Badge>
-                        ))
-                      )}
-                      {(design as any).subcategories && (design as any).subcategories.length > 2 && (
-                        <Badge variant="secondary" className="text-xs">
-                          +{(design as any).subcategories.length - 2}
-                        </Badge>
-                      )}
-                    </div>
                   </div>
                 </div>
               </Link>

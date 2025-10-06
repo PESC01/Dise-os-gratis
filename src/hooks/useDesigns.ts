@@ -22,25 +22,14 @@ export const useDesigns = () => {
         .from("designs")
         .select(`
           *,
-          images (*),
-          category:categories!designs_category_id_fkey (
-            id,
-            name
-          ),
-          design_subcategories (
-            subcategory_id,
-            subcategories:categories (*)
-          )
+          images (*)
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       
-      // Transform the data to have a flat subcategories array
-      return (designs as any[]).map((design: any) => ({
-        ...design,
-        subcategories: design.design_subcategories?.map((ds: any) => ds.subcategories) || []
-      })) as DesignWithDetails[];
+      // Return designs as-is for now
+      return (designs || []) as DesignWithDetails[];
     },
   });
 };
@@ -54,28 +43,14 @@ export const useDesign = (id: string) => {
         .from("designs")
         .select(`
           *,
-          images (*),
-          category:categories!designs_category_id_fkey (
-            id,
-            name
-          ),
-          design_subcategories (
-            subcategory_id,
-            subcategories:categories (*)
-          )
+          images (*)
         `)
         .eq("id", id)
         .single();
 
       if (error) throw error;
       
-      // Transform the data to have a flat subcategories array
-      const transformedDesign = {
-        ...(design as any),
-        subcategories: (design as any).design_subcategories?.map((ds: any) => ds.subcategories) || []
-      };
-      
-      return transformedDesign;
+      return design;
     },
     enabled: !!id,
   });
