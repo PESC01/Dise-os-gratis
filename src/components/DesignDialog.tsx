@@ -83,6 +83,7 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
         title,
         description: description || undefined,
         category_id: categoryId,
+        subcategory_ids: selectedSubcategoryIds,
         cover_image_url: coverImageUrl || undefined,
         download_link: downloadLink || undefined,
       });
@@ -91,6 +92,7 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
         title,
         description: description || undefined,
         category_id: categoryId,
+        subcategory_ids: selectedSubcategoryIds,
         cover_image_url: coverImageUrl || undefined,
         download_link: downloadLink || undefined,
       });
