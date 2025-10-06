@@ -17,6 +17,7 @@ const DesignDetail = () => {
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [shouldActivatePopunder, setShouldActivatePopunder] = useState(true); // Alterna el popunder
+  const [popunderScriptRef, setPopunderScriptRef] = useState<HTMLScriptElement | null>(null);
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -46,20 +47,26 @@ const DesignDetail = () => {
     }
   }, [showAdModal]);
 
-  // Cargar el popunder SIEMPRE que se presione "Descargar Ahora"
-  // Adsterra controla automáticamente que solo se muestre 1 cada 24 horas
+  // Cargar el popunder solo cuando debe activarse
   const loadPopunder = () => {
+    // Limpiar cualquier script de popunder anterior
+    if (popunderScriptRef && document.body.contains(popunderScriptRef)) {
+      document.body.removeChild(popunderScriptRef);
+    }
+    
     const popunderScript = document.createElement('script');
     popunderScript.type = 'text/javascript';
     popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
     document.body.appendChild(popunderScript);
-    
-    // Limpiar el script después de cargarlo
-    setTimeout(() => {
-      if (document.body.contains(popunderScript)) {
-        document.body.removeChild(popunderScript);
-      }
-    }, 1000);
+    setPopunderScriptRef(popunderScript);
+  };
+
+  // Limpiar el popunder antes de abrir el enlace de descarga
+  const cleanupPopunder = () => {
+    if (popunderScriptRef && document.body.contains(popunderScriptRef)) {
+      document.body.removeChild(popunderScriptRef);
+      setPopunderScriptRef(null);
+    }
   };
 
   const handleDownloadClick = () => {
@@ -78,12 +85,18 @@ const DesignDetail = () => {
 
   const handleProceedToDownload = () => {
     if (countdown === 0 && design) {
+      // Limpiar el script del popunder ANTES de abrir el enlace
+      cleanupPopunder();
+      
       // Ir a la descarga cuando se presiona "Continuar descarga"
       const downloadUrl = (design as any).download_link;
       
       if (downloadUrl) {
-        window.open(downloadUrl, "_blank");
-        setShowAdModal(false);
+        // Pequeño delay para asegurar que el script se limpió
+        setTimeout(() => {
+          window.open(downloadUrl, "_blank");
+          setShowAdModal(false);
+        }, 100);
       }
     }
   };
