@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Plus, Edit, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +102,17 @@ const AdminDesigns = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
                         {design.description}
                       </p>
+                    )}
+                    
+                    {/* Display categories */}
+                    {(design as any).categories && (design as any).categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {(design as any).categories.map((category: any) => (
+                          <Badge key={category.id} variant="secondary" className="text-xs">
+                            {category.name}
+                          </Badge>
+                        ))}
+                      </div>
                     )}
                   </div>
                   <div className="flex gap-2">

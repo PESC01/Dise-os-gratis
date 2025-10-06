@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Download, ExternalLink, Clock, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -125,9 +126,8 @@ const DesignDetail = () => {
     );
   }
 
-  // Obtener nombres de categorías (si existen)
-  const categoryName = (design as any).categories?.name || "Sin categoría";
-  const subcategoryName = (design as any).subcategories?.name || "";
+  // Obtener categorías del diseño
+  const designCategories = (design as any).categories || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -166,21 +166,16 @@ const DesignDetail = () => {
           {/* Design Info */}
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
             <div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                {categoryName && (
-                  <>
-                    <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                      {categoryName}
-                    </span>
-                    {subcategoryName && (
-                      <>
-                        <span>•</span>
-                        <span>{subcategoryName}</span>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
+              {/* Display multiple categories */}
+              {designCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {designCategories.map((category: any) => (
+                    <Badge key={category.id} className="px-3 py-1 bg-primary/10 text-primary font-medium hover:bg-primary/20">
+                      {category.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {(design as any).title}
               </h1>

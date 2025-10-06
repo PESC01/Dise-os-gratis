@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Search, Filter, Loader2, ChevronLeft, ChevronRight, ChevronsLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -62,13 +63,17 @@ const Index = () => {
         .includes(searchQuery.toLowerCase()) ||
         design.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Filtro por categoría
+      // Filtro por categoría - ahora considera múltiples categorías
       const matchesCategory =
-        selectedCategory === "all" || design.category_id === selectedCategory;
+        selectedCategory === "all" || 
+        (design as any).categories?.some((cat: any) => cat.id === selectedCategory) ||
+        design.category_id === selectedCategory; // Fallback para compatibilidad
 
-      // Filtro por subcategoría
+      // Filtro por subcategoría - también considera múltiples categorías
       const matchesSubcategory =
-        selectedSubcategory === "all" || design.subcategory_id === selectedSubcategory;
+        selectedSubcategory === "all" || 
+        (design as any).categories?.some((cat: any) => cat.id === selectedSubcategory) ||
+        design.subcategory_id === selectedSubcategory; // Fallback para compatibilidad
 
       return matchesSearch && matchesCategory && matchesSubcategory;
     });
@@ -200,6 +205,22 @@ const Index = () => {
                       <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
                         {design.description}
                       </p>
+                    )}
+                    
+                    {/* Display categories */}
+                    {(design as any).categories && (design as any).categories.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {(design as any).categories.slice(0, 3).map((category: any) => (
+                          <Badge key={category.id} variant="secondary" className="text-xs">
+                            {category.name}
+                          </Badge>
+                        ))}
+                        {(design as any).categories.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">
+                            +{(design as any).categories.length - 3}
+                          </Badge>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

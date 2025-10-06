@@ -98,6 +98,26 @@ export type Database = {
           created_at?: string
         }
       }
+      design_categories: {
+        Row: {
+          id: string
+          design_id: string
+          category_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          design_id: string
+          category_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          design_id?: string
+          category_id?: string
+          created_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never
