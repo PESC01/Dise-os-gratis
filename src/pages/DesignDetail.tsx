@@ -16,6 +16,7 @@ const DesignDetail = () => {
   const { id } = useParams();
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [shouldActivatePopunder, setShouldActivatePopunder] = useState(true); // Alterna el popunder
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -62,8 +63,13 @@ const DesignDetail = () => {
   };
 
   const handleDownloadClick = () => {
-    // SIEMPRE cargar el popunder en cada clic
-    loadPopunder();
+    // Activar el popunder solo en clics alternos (1er clic, 3er clic, 5to clic, etc.)
+    if (shouldActivatePopunder) {
+      loadPopunder();
+      setShouldActivatePopunder(false); // Próximo clic NO activará el popunder
+    } else {
+      setShouldActivatePopunder(true); // Próximo clic SÍ activará el popunder
+    }
     
     // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
     setShowAdModal(true);
