@@ -17,7 +17,7 @@ const DesignDetail = () => {
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [shouldActivatePopunder, setShouldActivatePopunder] = useState(true); // Alterna el popunder
-  const [popunderScriptRef, setPopunderScriptRef] = useState<HTMLScriptElement | null>(null);
+  const [popunderActive, setPopunderActive] = useState(false); // Indica si el popunder está activo para este ciclo
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -47,61 +47,49 @@ const DesignDetail = () => {
     }
   }, [showAdModal]);
 
-  // Cargar el popunder solo cuando debe activarse
-  const loadPopunder = () => {
-    // Limpiar cualquier script de popunder anterior
-    if (popunderScriptRef && document.body.contains(popunderScriptRef)) {
-      document.body.removeChild(popunderScriptRef);
+  const handleDownloadClick = () => {
+    // Determinar si activar el popunder en este clic (de manera intercalada)
+    if (shouldActivatePopunder) {
+      // Activar el popunder en ESTE clic
+      setPopunderActive(true);
+      setShouldActivatePopunder(false); // Próximo clic NO activará el popunder
+      
+      // Cargar el script del popunder SOLO cuando debe activarse
+      const popunderScript = document.createElement('script');
+      popunderScript.type = 'text/javascript';
+      popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
+      popunderScript.id = 'popunder-script-active'; // ID para identificarlo
+      document.body.appendChild(popunderScript);
+    } else {
+      // NO activar el popunder en este clic
+      setPopunderActive(false);
+      setShouldActivatePopunder(true); // Próximo clic SÍ activará el popunder
     }
     
-    const popunderScript = document.createElement('script');
-    popunderScript.type = 'text/javascript';
-    popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
-    document.body.appendChild(popunderScript);
-    setPopunderScriptRef(popunderScript);
-  };
-
-  // Limpiar el popunder antes de abrir el enlace de descarga
-  const cleanupPopunder = () => {
-    if (popunderScriptRef && document.body.contains(popunderScriptRef)) {
-      document.body.removeChild(popunderScriptRef);
-      setPopunderScriptRef(null);
-    }
-  };
-
-  const handleDownloadClick = () => {
     // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
     setShowAdModal(true);
     setCountdown(5);
-    
-    // Activar el popunder solo en clics alternos (1er clic, 3er clic, 5to clic, etc.)
-    // El popunder se activará cuando se haga clic en cualquier parte de la página
-    if (shouldActivatePopunder) {
-      // Esperar un momento para que el modal se abra y luego cargar el popunder
-      setTimeout(() => {
-        loadPopunder();
-      }, 300);
-      setShouldActivatePopunder(false); // Próximo clic NO activará el popunder
-    } else {
-      setShouldActivatePopunder(true); // Próximo clic SÍ activará el popunder
-    }
   };
 
   const handleProceedToDownload = () => {
     if (countdown === 0 && design) {
-      // IMPORTANTE: NO activar el popunder aquí
-      // Solo abrir el enlace de descarga directamente
       const downloadUrl = (design as any).download_link;
       
       if (downloadUrl) {
-        // Abrir la descarga y cerrar el modal
+        // Abrir el enlace de descarga
         window.open(downloadUrl, "_blank");
         setShowAdModal(false);
         
-        // Limpiar el popunder después de abrir el enlace
-        setTimeout(() => {
-          cleanupPopunder();
-        }, 500);
+        // Limpiar el popunder si estaba activo
+        if (popunderActive) {
+          setTimeout(() => {
+            const popunderScript = document.getElementById('popunder-script-active');
+            if (popunderScript && document.body.contains(popunderScript)) {
+              document.body.removeChild(popunderScript);
+            }
+            setPopunderActive(false);
+          }, 1000);
+        }
       }
     }
   };
