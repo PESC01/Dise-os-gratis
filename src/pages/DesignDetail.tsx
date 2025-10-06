@@ -28,6 +28,22 @@ const DesignDetail = () => {
     }
   }, [showAdModal, countdown]);
 
+  // Cargar el script del native banner cuando se abre el modal
+  useEffect(() => {
+    if (showAdModal) {
+      const script = document.createElement('script');
+      script.src = '//pl27790913.revenuecpmgate.com/81cb0cb805a777612ec57f2d571fda99/invoke.js';
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      document.body.appendChild(script);
+
+      return () => {
+        // Limpiar el script cuando se cierre el modal
+        document.body.removeChild(script);
+      };
+    }
+  }, [showAdModal]);
+
   const handleDownloadClick = () => {
     const currentCount = clickCount + 1;
     setClickCount(currentCount);
@@ -175,12 +191,9 @@ const DesignDetail = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
-            {/* Ad Placeholder */}
-            <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
-              <div className="text-center space-y-2">
-                <Clock className="h-12 w-12 mx-auto text-muted-foreground animate-pulse" />
-                <p className="text-sm text-muted-foreground">Espacio publicitario</p>
-              </div>
+            {/* Native Banner Ad */}
+            <div className="min-h-[250px] rounded-lg overflow-hidden">
+              <div id="container-81cb0cb805a777612ec57f2d571fda99"></div>
             </div>
 
             <Button
