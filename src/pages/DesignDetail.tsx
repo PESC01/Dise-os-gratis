@@ -17,7 +17,7 @@ const DesignDetail = () => {
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [shouldActivatePopunder, setShouldActivatePopunder] = useState(true); // Alterna el popunder
-  const [popunderActive, setPopunderActive] = useState(false); // Indica si el popunder está activo para este ciclo
+  const [loadPopunderForThisDownload, setLoadPopunderForThisDownload] = useState(false); // Controla si cargar popunder en esta descarga
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -47,26 +47,40 @@ const DesignDetail = () => {
     }
   }, [showAdModal]);
 
+  // Cargar el popunder SOLO cuando el modal se abre Y debe activarse de manera intercalada
+  useEffect(() => {
+    if (showAdModal && loadPopunderForThisDownload) {
+      // Esperar un momento para que el modal esté completamente abierto
+      const timer = setTimeout(() => {
+        const popunderScript = document.createElement('script');
+        popunderScript.type = 'text/javascript';
+        popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
+        popunderScript.id = 'popunder-script-active';
+        document.body.appendChild(popunderScript);
+      }, 500);
+
+      return () => {
+        clearTimeout(timer);
+        // Limpiar el popunder cuando se cierre el modal
+        const script = document.getElementById('popunder-script-active');
+        if (script && document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+  }, [showAdModal, loadPopunderForThisDownload]);
+
   const handleDownloadClick = () => {
-    // Determinar si activar el popunder en este clic (de manera intercalada)
+    // Determinar si debe activarse el popunder en ESTA descarga (intercalado)
     if (shouldActivatePopunder) {
-      // Activar el popunder en ESTE clic
-      setPopunderActive(true);
-      setShouldActivatePopunder(false); // Próximo clic NO activará el popunder
-      
-      // Cargar el script del popunder SOLO cuando debe activarse
-      const popunderScript = document.createElement('script');
-      popunderScript.type = 'text/javascript';
-      popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
-      popunderScript.id = 'popunder-script-active'; // ID para identificarlo
-      document.body.appendChild(popunderScript);
+      setLoadPopunderForThisDownload(true); // SÍ cargar popunder para esta descarga
+      setShouldActivatePopunder(false); // La próxima descarga NO tendrá popunder
     } else {
-      // NO activar el popunder en este clic
-      setPopunderActive(false);
-      setShouldActivatePopunder(true); // Próximo clic SÍ activará el popunder
+      setLoadPopunderForThisDownload(false); // NO cargar popunder para esta descarga
+      setShouldActivatePopunder(true); // La próxima descarga SÍ tendrá popunder
     }
     
-    // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
+    // Abrir el modal con el native banner
     setShowAdModal(true);
     setCountdown(5);
   };
@@ -76,20 +90,10 @@ const DesignDetail = () => {
       const downloadUrl = (design as any).download_link;
       
       if (downloadUrl) {
-        // Abrir el enlace de descarga
+        // Solo abrir el enlace
+        // Si el popunder está cargado, se activará con este clic automáticamente
         window.open(downloadUrl, "_blank");
         setShowAdModal(false);
-        
-        // Limpiar el popunder si estaba activo
-        if (popunderActive) {
-          setTimeout(() => {
-            const popunderScript = document.getElementById('popunder-script-active');
-            if (popunderScript && document.body.contains(popunderScript)) {
-              document.body.removeChild(popunderScript);
-            }
-            setPopunderActive(false);
-          }, 1000);
-        }
       }
     }
   };
