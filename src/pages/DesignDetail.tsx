@@ -16,6 +16,7 @@ const DesignDetail = () => {
   const { id } = useParams();
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
+  const [clickCount, setClickCount] = useState(0);
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -28,18 +29,26 @@ const DesignDetail = () => {
   }, [showAdModal, countdown]);
 
   const handleDownloadClick = () => {
-    setShowAdModal(true);
-    setCountdown(5);
+    const currentCount = clickCount + 1;
+    setClickCount(currentCount);
+
+    if (currentCount === 1) {
+      // Primera vez: mostrar modal de espera (el popunder se ejecutará automáticamente)
+      setShowAdModal(true);
+      setCountdown(5);
+    } else {
+      // Segunda vez o más: ir directamente a la descarga
+      const downloadUrl = (design as any)?.download_link;
+      if (downloadUrl) {
+        window.open(downloadUrl, "_blank");
+      }
+    }
   };
 
   const handleProceedToDownload = () => {
-    if (countdown === 0 && design) {
-      const downloadUrl = (design as any).download_link;
-      
-      if (downloadUrl) {
-        window.open(downloadUrl, "_blank");
-        setShowAdModal(false);
-      }
+    if (countdown === 0) {
+      setShowAdModal(false);
+      // Después de cerrar el modal, el siguiente clic irá directo a la descarga
     }
   };
 
