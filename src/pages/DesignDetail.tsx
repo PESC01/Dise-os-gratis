@@ -126,6 +126,9 @@ const DesignDetail = () => {
     );
   }
 
+  return (
+    <div className="min-h-screen bg-background">
+
   // Obtener categorías del diseño
   const designCategories = (design as any).categories || [];
 
@@ -166,16 +169,21 @@ const DesignDetail = () => {
           {/* Design Info */}
           <div className="space-y-6 animate-fade-in" style={{ animationDelay: "100ms" }}>
             <div>
-              {/* Display multiple categories */}
-              {designCategories.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {designCategories.map((category: any) => (
-                    <Badge key={category.id} className="px-3 py-1 bg-primary/10 text-primary font-medium hover:bg-primary/20">
-                      {category.name}
+              {/* Display category and subcategories */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {(design as any).category && (
+                  <Badge className="px-3 py-1 bg-primary text-primary-foreground font-medium">
+                    {(design as any).category.name}
+                  </Badge>
+                )}
+                {(design as any).subcategories && (design as any).subcategories.length > 0 && (
+                  (design as any).subcategories.map((subcategory: any) => (
+                    <Badge key={subcategory.id} variant="secondary" className="px-3 py-1">
+                      {subcategory.name}
                     </Badge>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
               <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {(design as any).title}
               </h1>

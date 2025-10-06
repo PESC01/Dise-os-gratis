@@ -13,6 +13,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { X } from "lucide-react";
 import { useCreateDesign, useUpdateDesign, type Design } from "@/hooks/useDesigns";
 import { useCategories } from "@/hooks/useCategories";
@@ -21,19 +28,16 @@ import { CloudinaryUpload } from "./CloudinaryUpload";
 interface DesignDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  design?: Design & { categories?: any[] };
+  design?: Design & { subcategories?: any[] };
 }
 
 export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) {
   const [title, setTitle] = useState(design?.title || "");
   const [description, setDescription] = useState(design?.description || "");
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [categoryId, setCategoryId] = useState<string | undefined>(
     design?.category_id || undefined
   );
-  const [subcategoryId, setSubcategoryId] = useState<string | undefined>(
-    design?.subcategory_id || undefined
-  );
+  const [selectedSubcategoryIds, setSelectedSubcategoryIds] = useState<string[]>([]);
   const [coverImageUrl, setCoverImageUrl] = useState<string>(design?.cover_image_url || "");
   const [downloadLink, setDownloadLink] = useState<string>(design?.download_link || "");
 
@@ -46,38 +50,28 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
       setTitle(design.title);
       setDescription(design.description || "");
       setCategoryId(design.category_id || undefined);
-      setSubcategoryId(design.subcategory_id || undefined);
       setCoverImageUrl(design.cover_image_url || "");
       setDownloadLink(design.download_link || "");
       
-      // Set selected categories from the design
-      const categoryIds = design.categories?.map(cat => cat.id) || [];
-      setSelectedCategoryIds(categoryIds);
+      // Set selected subcategories from the design
+      const subcategoryIds = design.subcategories?.map(sub => sub.id) || [];
+      setSelectedSubcategoryIds(subcategoryIds);
     }
   }, [design]);
 
   const selectedCategory = categories?.find((cat) => cat.id === categoryId);
   const subcategories = selectedCategory?.subcategories || [];
 
-  // Get all categories (parents and children) in a flat array
-  const allCategories = categories?.reduce((acc: any[], cat) => {
-    acc.push(cat);
-    if (cat.subcategories && cat.subcategories.length > 0) {
-      acc.push(...cat.subcategories);
-    }
-    return acc;
-  }, []) || [];
-
-  const toggleCategory = (categoryId: string) => {
-    setSelectedCategoryIds(prev =>
-      prev.includes(categoryId)
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
+  const toggleSubcategory = (subcategoryId: string) => {
+    setSelectedSubcategoryIds(prev =>
+      prev.includes(subcategoryId)
+        ? prev.filter(id => id !== subcategoryId)
+        : [...prev, subcategoryId]
     );
   };
 
-  const removeCategory = (categoryId: string) => {
-    setSelectedCategoryIds(prev => prev.filter(id => id !== categoryId));
+  const removeSubcategory = (subcategoryId: string) => {
+    setSelectedSubcategoryIds(prev => prev.filter(id => id !== subcategoryId));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -89,8 +83,7 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
         title,
         description: description || undefined,
         category_id: categoryId,
-        subcategory_id: subcategoryId,
-        category_ids: selectedCategoryIds,
+        subcategory_ids: selectedSubcategoryIds,
         cover_image_url: coverImageUrl || undefined,
         download_link: downloadLink || undefined,
       });
@@ -99,8 +92,7 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
         title,
         description: description || undefined,
         category_id: categoryId,
-        subcategory_id: subcategoryId,
-        category_ids: selectedCategoryIds,
+        subcategory_ids: selectedSubcategoryIds,
         cover_image_url: coverImageUrl || undefined,
         download_link: downloadLink || undefined,
       });
@@ -114,8 +106,7 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
     setTitle("");
     setDescription("");
     setCategoryId(undefined);
-    setSubcategoryId(undefined);
-    setSelectedCategoryIds([]);
+    setSelectedSubcategoryIds([]);
     setCoverImageUrl("");
     setDownloadLink("");
   };
@@ -183,71 +174,72 @@ export function DesignDialog({ open, onOpenChange, design }: DesignDialogProps) 
             </div>
 
             <div className="grid gap-2">
-              <Label>Categorías (selecciona una o más)</Label>
-              
-              {/* Selected categories */}
-              {selectedCategoryIds.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {selectedCategoryIds.map(catId => {
-                    const category = allCategories.find(c => c.id === catId);
-                    return category ? (
-                      <Badge key={catId} variant="secondary" className="gap-1">
-                        {category.name}
-                        <button
-                          type="button"
-                          onClick={() => removeCategory(catId)}
-                          className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ) : null;
-                  })}
-                </div>
-              )}
+              <Label htmlFor="category">Categoría Principal *</Label>
+              <Select
+                value={categoryId}
+                onValueChange={(value) => {
+                  setCategoryId(value);
+                  setSelectedSubcategoryIds([]); // Limpiar subcategorías al cambiar categoría
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona categoría" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories?.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-              {/* Categories list with checkboxes */}
-              <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto space-y-3">
-                {categories?.map((cat) => (
-                  <div key={cat.id} className="space-y-2">
-                    <div className="flex items-center space-x-2">
+            {categoryId && subcategories.length > 0 && (
+              <div className="grid gap-2">
+                <Label>Subcategorías (selecciona una o más)</Label>
+                
+                {/* Selected subcategories */}
+                {selectedSubcategoryIds.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {selectedSubcategoryIds.map(subId => {
+                      const subcategory = subcategories.find(s => s.id === subId);
+                      return subcategory ? (
+                        <Badge key={subId} variant="secondary" className="gap-1">
+                          {subcategory.name}
+                          <button
+                            type="button"
+                            onClick={() => removeSubcategory(subId)}
+                            className="ml-1 hover:bg-secondary-foreground/20 rounded-full"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+
+                {/* Subcategories list with checkboxes */}
+                <div className="border rounded-md p-3 max-h-[200px] overflow-y-auto space-y-2">
+                  {subcategories.map((sub) => (
+                    <div key={sub.id} className="flex items-center space-x-2">
                       <Checkbox
-                        id={`cat-${cat.id}`}
-                        checked={selectedCategoryIds.includes(cat.id)}
-                        onCheckedChange={() => toggleCategory(cat.id)}
+                        id={`sub-${sub.id}`}
+                        checked={selectedSubcategoryIds.includes(sub.id)}
+                        onCheckedChange={() => toggleSubcategory(sub.id)}
                       />
                       <label
-                        htmlFor={`cat-${cat.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        htmlFor={`sub-${sub.id}`}
+                        className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
                       >
-                        {cat.name}
+                        {sub.name}
                       </label>
                     </div>
-                    
-                    {/* Subcategories */}
-                    {cat.subcategories && cat.subcategories.length > 0 && (
-                      <div className="ml-6 space-y-2">
-                        {cat.subcategories.map((sub) => (
-                          <div key={sub.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`cat-${sub.id}`}
-                              checked={selectedCategoryIds.includes(sub.id)}
-                              onCheckedChange={() => toggleCategory(sub.id)}
-                            />
-                            <label
-                              htmlFor={`cat-${sub.id}`}
-                              className="text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                            >
-                              {sub.name}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <DialogFooter>
             <Button

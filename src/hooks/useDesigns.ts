@@ -7,9 +7,10 @@ export type Design = Tables<"designs">;
 export type Image = Tables<"images">;
 export type Category = Tables<"categories">;
 
-export type DesignWithImages = Design & {
+export type DesignWithDetails = Design & {
   images?: Image[];
-  categories?: Category[];
+  category?: Category;
+  subcategories?: Category[];
 };
 
 // Fetch all designs
@@ -22,20 +23,24 @@ export const useDesigns = () => {
         .select(`
           *,
           images (*),
-          design_categories (
-            category_id,
-            categories (*)
+          category:categories!designs_category_id_fkey (
+            id,
+            name
+          ),
+          design_subcategories (
+            subcategory_id,
+            subcategories:categories (*)
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       
-      // Transform the data to have a flat categories array
+      // Transform the data to have a flat subcategories array
       return (designs as any[]).map((design: any) => ({
         ...design,
-        categories: design.design_categories?.map((dc: any) => dc.categories) || []
-      })) as DesignWithImages[];
+        subcategories: design.design_subcategories?.map((ds: any) => ds.subcategories) || []
+      })) as DesignWithDetails[];
     },
   });
 };
@@ -50,9 +55,13 @@ export const useDesign = (id: string) => {
         .select(`
           *,
           images (*),
-          design_categories (
-            category_id,
-            categories (*)
+          category:categories!designs_category_id_fkey (
+            id,
+            name
+          ),
+          design_subcategories (
+            subcategory_id,
+            subcategories:categories (*)
           )
         `)
         .eq("id", id)
@@ -60,10 +69,10 @@ export const useDesign = (id: string) => {
 
       if (error) throw error;
       
-      // Transform the data to have a flat categories array
+      // Transform the data to have a flat subcategories array
       const transformedDesign = {
         ...(design as any),
-        categories: (design as any).design_categories?.map((dc: any) => dc.categories) || []
+        subcategories: (design as any).design_subcategories?.map((ds: any) => ds.subcategories) || []
       };
       
       return transformedDesign;
@@ -81,14 +90,13 @@ export const useCreateDesign = () => {
     mutationFn: async (data: {
       title: string;
       description?: string;
-      category_ids?: string[];
       category_id?: string;
-      subcategory_id?: string;
+      subcategory_ids?: string[];
       cover_image_url?: string;
       download_link?: string;
       images?: { url: string; alt_text?: string; display_order?: number }[];
     }) => {
-      const { images, category_ids, ...designData } = data;
+      const { images, subcategory_ids, ...designData } = data;
 
       // @ts-ignore - Supabase types will be generated after tables are created
       const { data: design, error: designError } = await supabase
@@ -99,19 +107,19 @@ export const useCreateDesign = () => {
 
       if (designError) throw designError;
 
-      // Insert category relationships
-      if (category_ids && category_ids.length > 0) {
-        const categoryRelations = category_ids.map(category_id => ({
+      // Insert subcategory relationships
+      if (subcategory_ids && subcategory_ids.length > 0) {
+        const subcategoryRelations = subcategory_ids.map(subcategory_id => ({
           design_id: design!.id,
-          category_id
+          subcategory_id
         }));
 
         // @ts-ignore
-        const { error: categoriesError } = await supabase
-          .from("design_categories")
-          .insert(categoryRelations);
+        const { error: subcategoriesError } = await supabase
+          .from("design_subcategories")
+          .insert(subcategoryRelations);
 
-        if (categoriesError) throw categoriesError;
+        if (subcategoriesError) throw subcategoriesError;
       }
 
       // Insert images if provided
@@ -157,7 +165,7 @@ export const useUpdateDesign = () => {
   return useMutation({
     mutationFn: async ({
       id,
-      category_ids,
+      subcategory_ids,
       ...data
     }: {
       id: string;
@@ -165,7 +173,7 @@ export const useUpdateDesign = () => {
       description?: string;
       category_id?: string;
       subcategory_id?: string;
-      category_ids?: string[];
+      subcategory_ids?: string[];
       cover_image_url?: string;
       download_link?: string;
     }) => {
@@ -179,28 +187,28 @@ export const useUpdateDesign = () => {
 
       if (error) throw error;
 
-      // Update category relationships if provided
-      if (category_ids !== undefined) {
+      // Update subcategory relationships if provided
+      if (subcategory_ids !== undefined) {
         // First, delete all existing relationships
         // @ts-ignore
         const { error: deleteError } = await supabase
-          .from("design_categories")
+          .from("design_subcategories")
           .delete()
           .eq("design_id", id);
 
         if (deleteError) throw deleteError;
 
         // Then, insert new relationships
-        if (category_ids.length > 0) {
-          const categoryRelations = category_ids.map(category_id => ({
+        if (subcategory_ids.length > 0) {
+          const subcategoryRelations = subcategory_ids.map(subcategory_id => ({
             design_id: id,
-            category_id
+            subcategory_id
           }));
 
           // @ts-ignore
           const { error: insertError } = await supabase
-            .from("design_categories")
-            .insert(categoryRelations);
+            .from("design_subcategories")
+            .insert(subcategoryRelations);
 
           if (insertError) throw insertError;
         }

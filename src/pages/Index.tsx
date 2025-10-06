@@ -63,17 +63,15 @@ const Index = () => {
         .includes(searchQuery.toLowerCase()) ||
         design.description?.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Filtro por categoría - ahora considera múltiples categorías
+      // Filtro por categoría principal
       const matchesCategory =
         selectedCategory === "all" || 
-        (design as any).categories?.some((cat: any) => cat.id === selectedCategory) ||
-        design.category_id === selectedCategory; // Fallback para compatibilidad
+        design.category_id === selectedCategory;
 
-      // Filtro por subcategoría - también considera múltiples categorías
+      // Filtro por subcategoría - busca en las subcategorías del diseño
       const matchesSubcategory =
         selectedSubcategory === "all" || 
-        (design as any).categories?.some((cat: any) => cat.id === selectedSubcategory) ||
-        design.subcategory_id === selectedSubcategory; // Fallback para compatibilidad
+        (design as any).subcategories?.some((sub: any) => sub.id === selectedSubcategory);
 
       return matchesSearch && matchesCategory && matchesSubcategory;
     });
@@ -207,21 +205,26 @@ const Index = () => {
                       </p>
                     )}
                     
-                    {/* Display categories */}
-                    {(design as any).categories && (design as any).categories.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {(design as any).categories.slice(0, 3).map((category: any) => (
-                          <Badge key={category.id} variant="secondary" className="text-xs">
-                            {category.name}
+                    {/* Display category and subcategories */}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {(design as any).category && (
+                        <Badge variant="default" className="text-xs">
+                          {(design as any).category.name}
+                        </Badge>
+                      )}
+                      {(design as any).subcategories && (design as any).subcategories.length > 0 && (
+                        (design as any).subcategories.slice(0, 2).map((subcategory: any) => (
+                          <Badge key={subcategory.id} variant="secondary" className="text-xs">
+                            {subcategory.name}
                           </Badge>
-                        ))}
-                        {(design as any).categories.length > 3 && (
-                          <Badge variant="secondary" className="text-xs">
-                            +{(design as any).categories.length - 3}
-                          </Badge>
-                        )}
-                      </div>
-                    )}
+                        ))
+                      )}
+                      {(design as any).subcategories && (design as any).subcategories.length > 2 && (
+                        <Badge variant="secondary" className="text-xs">
+                          +{(design as any).subcategories.length - 2}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Link>

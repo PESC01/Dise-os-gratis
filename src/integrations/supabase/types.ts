@@ -98,23 +98,23 @@ export type Database = {
           created_at?: string
         }
       }
-      design_categories: {
+      design_subcategories: {
         Row: {
           id: string
           design_id: string
-          category_id: string
+          subcategory_id: string
           created_at: string
         }
         Insert: {
           id?: string
           design_id: string
-          category_id: string
+          subcategory_id: string
           created_at?: string
         }
         Update: {
           id?: string
           design_id?: string
-          category_id?: string
+          subcategory_id?: string
           created_at?: string
         }
       }
