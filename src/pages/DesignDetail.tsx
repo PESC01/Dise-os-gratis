@@ -16,7 +16,7 @@ const DesignDetail = () => {
   const { id } = useParams();
   const [showAdModal, setShowAdModal] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  const [clickCount, setClickCount] = useState(0);
+  const [shouldShowAd, setShouldShowAd] = useState(true); // Alterna entre true y false
 
   // Obtener diseño real de Supabase
   const { data: design, isLoading } = useDesign(id || "");
@@ -39,32 +39,57 @@ const DesignDetail = () => {
 
       return () => {
         // Limpiar el script cuando se cierre el modal
-        document.body.removeChild(script);
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
       };
     }
   }, [showAdModal]);
 
-  const handleDownloadClick = () => {
-    const currentCount = clickCount + 1;
-    setClickCount(currentCount);
+  // Cargar el popunder solo cuando se debe mostrar el anuncio
+  const loadPopunder = () => {
+    const popunderScript = document.createElement('script');
+    popunderScript.type = 'text/javascript';
+    popunderScript.src = '//pl27790861.revenuecpmgate.com/b7/28/1d/b7281d1ec569051b2883dffa7f970b09.js';
+    document.body.appendChild(popunderScript);
+    
+    // Simular un clic para activar el popunder
+    setTimeout(() => {
+      if (document.body.contains(popunderScript)) {
+        document.body.removeChild(popunderScript);
+      }
+    }, 1000);
+  };
 
-    if (currentCount === 1) {
-      // Primera vez: mostrar modal de espera (el popunder se ejecutará automáticamente)
+  const handleDownloadClick = () => {
+    if (shouldShowAd) {
+      // Cargar y activar el popunder
+      loadPopunder();
+      // Mostrar modal con native banner
       setShowAdModal(true);
       setCountdown(5);
+      // La próxima vez irá directo a la descarga
+      setShouldShowAd(false);
     } else {
-      // Segunda vez o más: ir directamente a la descarga
+      // Ir directamente a la descarga
       const downloadUrl = (design as any)?.download_link;
       if (downloadUrl) {
         window.open(downloadUrl, "_blank");
+        // La próxima vez mostrará el modal con popunder
+        setShouldShowAd(true);
       }
     }
   };
 
   const handleProceedToDownload = () => {
-    if (countdown === 0) {
-      setShowAdModal(false);
-      // Después de cerrar el modal, el siguiente clic irá directo a la descarga
+    if (countdown === 0 && design) {
+      // Ir a la descarga cuando se presiona "Continuar descarga"
+      const downloadUrl = (design as any).download_link;
+      
+      if (downloadUrl) {
+        window.open(downloadUrl, "_blank");
+        setShowAdModal(false);
+      }
     }
   };
 
