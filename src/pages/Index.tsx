@@ -71,7 +71,7 @@ const Index = () => {
       // Filtro por subcategoría - busca en las subcategorías del diseño
       const matchesSubcategory =
         selectedSubcategory === "all" || 
-        (design as any).subcategories?.some((sub: any) => sub.id === selectedSubcategory);
+        design.subcategories?.some((sub) => sub.id === selectedSubcategory) || false;
 
       return matchesSearch && matchesCategory && matchesSubcategory;
     });

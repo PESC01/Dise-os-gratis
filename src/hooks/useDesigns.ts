@@ -18,6 +18,8 @@ export const useDesigns = () => {
   return useQuery({
     queryKey: ["designs"],
     queryFn: async () => {
+      // Fetch designs with images
+      // @ts-ignore
       const { data: designs, error } = await supabase
         .from("designs")
         .select(`
@@ -28,8 +30,38 @@ export const useDesigns = () => {
 
       if (error) throw error;
       
-      // Return designs as-is for now
-      return (designs || []) as DesignWithDetails[];
+      if (!designs) return [];
+
+      // Fetch all subcategory relations
+      // @ts-ignore
+      const { data: allSubcategoryRelations, error: subError } = await supabase
+        .from("design_subcategories")
+        .select(`
+          design_id,
+          subcategory_id,
+          categories!design_subcategories_subcategory_id_fkey (*)
+        `);
+
+      if (subError) {
+        console.error("Error fetching subcategories:", subError);
+      }
+
+      // Map subcategories to designs
+      // @ts-ignore
+      const designsWithSubcategories: DesignWithDetails[] = designs.map((design: any) => {
+        // @ts-ignore
+        const designSubcategories = allSubcategoryRelations
+          ?.filter((rel: any) => rel.design_id === design.id)
+          .map((rel: any) => rel.categories)
+          .filter(Boolean) || [];
+        
+        return {
+          ...design,
+          subcategories: designSubcategories
+        };
+      });
+      
+      return designsWithSubcategories;
     },
   });
 };
@@ -39,6 +71,7 @@ export const useDesign = (id: string) => {
   return useQuery({
     queryKey: ["designs", id],
     queryFn: async () => {
+      // @ts-ignore
       const { data: design, error } = await supabase
         .from("designs")
         .select(`
@@ -50,7 +83,33 @@ export const useDesign = (id: string) => {
 
       if (error) throw error;
       
-      return design;
+      if (!design) return null;
+
+      // Fetch subcategories for this design
+      // @ts-ignore
+      const { data: subcategoryRelations, error: subError } = await supabase
+        .from("design_subcategories")
+        .select(`
+          subcategory_id,
+          categories!design_subcategories_subcategory_id_fkey (*)
+        `)
+        .eq("design_id", design.id);
+
+      if (subError) {
+        console.error("Error fetching subcategories:", subError);
+        // @ts-ignore
+        return { ...design, subcategories: [] };
+      }
+
+      // @ts-ignore
+      const subcategories = subcategoryRelations?.map((rel: any) => rel.categories).filter(Boolean) || [];
+      
+      // @ts-ignore
+      return {
+        // @ts-ignore
+        ...design,
+        subcategories
+      } as DesignWithDetails;
     },
     enabled: !!id,
   });
