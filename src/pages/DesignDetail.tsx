@@ -70,33 +70,38 @@ const DesignDetail = () => {
   };
 
   const handleDownloadClick = () => {
+    // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
+    setShowAdModal(true);
+    setCountdown(5);
+    
     // Activar el popunder solo en clics alternos (1er clic, 3er clic, 5to clic, etc.)
+    // El popunder se activará cuando se haga clic en cualquier parte de la página
     if (shouldActivatePopunder) {
-      loadPopunder();
+      // Esperar un momento para que el modal se abra y luego cargar el popunder
+      setTimeout(() => {
+        loadPopunder();
+      }, 300);
       setShouldActivatePopunder(false); // Próximo clic NO activará el popunder
     } else {
       setShouldActivatePopunder(true); // Próximo clic SÍ activará el popunder
     }
-    
-    // SIEMPRE mostrar el modal con native banner y espera de 5 segundos
-    setShowAdModal(true);
-    setCountdown(5);
   };
 
   const handleProceedToDownload = () => {
     if (countdown === 0 && design) {
-      // Limpiar el script del popunder ANTES de abrir el enlace
-      cleanupPopunder();
-      
-      // Ir a la descarga cuando se presiona "Continuar descarga"
+      // IMPORTANTE: NO activar el popunder aquí
+      // Solo abrir el enlace de descarga directamente
       const downloadUrl = (design as any).download_link;
       
       if (downloadUrl) {
-        // Pequeño delay para asegurar que el script se limpió
+        // Abrir la descarga y cerrar el modal
+        window.open(downloadUrl, "_blank");
+        setShowAdModal(false);
+        
+        // Limpiar el popunder después de abrir el enlace
         setTimeout(() => {
-          window.open(downloadUrl, "_blank");
-          setShowAdModal(false);
-        }, 100);
+          cleanupPopunder();
+        }, 500);
       }
     }
   };
